@@ -10,10 +10,6 @@ let user = {}
 
 app.use(logger("dev"))
 
-// register passport middleware
-app.use(passport.initialize()) // this will activate passport routing
-
-
 // create config object
 const env = {
   clientId: process.env.CLIENT_ID,
