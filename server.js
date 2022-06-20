@@ -112,6 +112,7 @@ app.get('/auth/github/callback',
   }
 );
 
+// check if user provided a valid JWT either in header or URL param "token"
 const authLocal = (req, res, next) => {
 
   const token = req.headers.token || req.query.token
@@ -129,7 +130,8 @@ const authLocal = (req, res, next) => {
   }
 }
 
-// protect by session? passport.authenticate("session"), 
+// protected route 
+// => only accessible if we provide a valad JWT in either header "token" or URL param "token"
 app.get("/profile", authLocal, (req, res) => {
   console.log("[PROFILE]")
   console.log("- User: ", req.user)
