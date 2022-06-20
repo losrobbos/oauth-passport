@@ -75,7 +75,7 @@ passport.use(githubStrategy);
 // route which will redirect us to github for authenticing (loggin us in)
 app.get('/auth/github', passport.authenticate('github', { 
   session: false, 
-  scope: process.env.SCOPES?.split(",") 
+  scope: process.env.SCOPES?.split(",") // request scopes / privileges you want to have access to
 }));
 
 // CALLBACK route which will wait for the login response...
