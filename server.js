@@ -33,6 +33,7 @@ let githubStrategy = new GitHubStrategy(
   (accessToken, refreshToken, profile, callback) => {
     // profile => contains github profile information
     console.log("[LOGIN / STRATEGY CALLBACK]")
+    console.log({ profile })
     console.log( "Data: ", profile.username, profile.profileUrl, accessToken)
     callback(null, profile) // tell GitHub we successfully received the user info
     // by this confirmation, it will forward us finally to the CALLBACK url
@@ -72,7 +73,10 @@ passport.use(githubStrategy);
 
 
 // route which will redirect us to github for authenticing (loggin us in)
-app.get('/auth/github', passport.authenticate('github', { session: false }));
+app.get('/auth/github', passport.authenticate('github', { 
+  session: false, 
+  scope: process.env.SCOPES?.split(",") 
+}));
 
 // CALLBACK route which will wait for the login response...
   // handles both: successful logins or login cancelation
