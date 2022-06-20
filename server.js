@@ -104,6 +104,7 @@ app.get('/auth/github/callback',
       _id: req.user.id,
       username: req.user.username,
       profileUrl: req.user.profileUrl,
+      avatarUrl: req.user.avatar_url || req.user._json.avatar_url,
     }
     const token = jwt.sign(tokenData, process.env.JWT_SECRET)
 
@@ -135,12 +136,13 @@ const authLocal = (req, res, next) => {
 app.get("/profile", authLocal, (req, res) => {
   console.log("[PROFILE]")
   console.log("- User: ", req.user)
-  const { username, profileUrl } = user
+  const { username, profileUrl, avatarUrl } = req.user
 
   res.send(`
     <h1>User Profile</h1>
-    <div>Username: ${req.user?.username}</div>
-    <div>URL: ${req.user?.profileUrl}</div>    
+    <img width="150" height="150" src="${avatarUrl}" />
+    <div>Username: ${username}</div>
+    <div>URL: ${profileUrl}</div>    
     <div><a href="/">Back to Home</a></div>    
   `)
 })
