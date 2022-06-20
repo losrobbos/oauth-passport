@@ -116,7 +116,9 @@ passport.serializeUser(async (userGithub, done) => {
 
 });
 
-// read received user out of session into object
+// read userId from session 
+// and read FULL user info (e.g. from database) into req.user
+// by calling the "done" callback at the end, we can decide what info should get stored inside req.user 
 passport.deserializeUser(async (userId, done) => {
   console.log("[PASSPORT] DESERIALIZE USER called");
   console.log("- UserID in session: ", userId)
