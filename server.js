@@ -159,8 +159,17 @@ app.get('/auth/github/callback',
 // app.use(passport.authenticate("session"))
 
 
+const authLocal = (req, res, next) => {
+  if(!req.isAuthenticated()) {
+    return res.status(401).json({
+      error: "Not authenticated, buddy"
+    })
+  }
+  next()
+}
+
 // protect by session? passport.authenticate("session"), 
-app.get("/profile", (req, res) => {
+app.get("/profile", authLocal, (req, res) => {
   console.log("[PROFILE]")
   console.log("- Authenticated: ", req.isAuthenticated())
   console.log("- Session: ", req.session)
