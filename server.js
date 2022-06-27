@@ -4,7 +4,8 @@ const app = express();
 const passport = require("passport")
 const jwt = require("jsonwebtoken")
 const logger = require("morgan")
-let GitHubStrategy = require("passport-github").Strategy
+let GoogleStrategy = require("passport-google-oauth20").Strategy
+// let GitHubStrategy = require("passport-github").Strategy
 
 let user = {}
 
@@ -14,7 +15,7 @@ app.use(logger("dev"))
 const env = {
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  callbackUrl: process.env.CALLBACK_URL
+  callbackURL: process.env.CALLBACK_URL
 }
 
 console.log("Our config values: ", env)
@@ -22,11 +23,11 @@ console.log("Our config values: ", env)
 // Setting up password strategy
 
 // create an instance of GitHubStrategy
-let githubStrategy = new GitHubStrategy(
+let googleStrategy = new GoogleStrategy(
   {
     clientID: env.clientId,
     clientSecret: env.clientSecret,
-    // callbackURL: env.callbackUrl
+    callbackURL: env.callbackURL
   },
   // LOGIN CALLBACK
   // this will get called AFTER successful EXCHANGE of the CODE with an ACCESS TOKEN
@@ -34,7 +35,6 @@ let githubStrategy = new GitHubStrategy(
     // profile => contains github profile information
     console.log("[LOGIN / STRATEGY CALLBACK]")
     console.log({ profile })
-    console.log( "Data: ", profile.username, profile.profileUrl, accessToken)
     callback(null, profile) // tell GitHub we successfully received the user info
     // by this confirmation, it will forward us finally to the CALLBACK url
 
@@ -45,47 +45,28 @@ let githubStrategy = new GitHubStrategy(
   }
 )
 
-/**
- * PASSPORT FLOW
- * 
- * - /auth/github => redirect user to GitHub login page
- * - the redirect is done by calling the passport.authenticate("provider") middleware
- * - Once GitHub authenticated that user, GitHub will send us back
- * to the callbackURL /auth/github/callback
- * - The Social Provider alongside sends a short lived CODE to us in the URL
- * - Now Passport will exchange that received code against an accessToken
- *   - the accessToken grants us permission to get profile data!
- * - The exchange is triggered by calling passport.authenticate("provider") again!
- * - Now we land at the Strategy CALLBACK function
- *   - here we finally have an accessToken and the user profile data
- *   - now it is safe that the authentication part worked
- *   - we can now store / update the received info in our database
- *   - => so the callback is the right place to make our DATABASE operation
- *  - At the end passport redirects us to the "successRedirect" or instead another callback
- *  - here we can now handle the JWT creation and redirect to the frontend with the JWT
- *    - because we cannot append headers in a redirect we need to attach the JWT to the URL
- *  - And that is finally it. That is the whole passport flow
- */
-// register GitHub login provider at passport
-passport.use(githubStrategy);
-// passport.use(googleStrategy)
-// passport.use(facebookStrategy)
+// register login provider at passport
+passport.use(googleStrategy);
 
 
-// route which will redirect us to github for authenticing (loggin us in)
-app.get('/auth/github', passport.authenticate('github', { 
-  session: false, 
-  scope: process.env.SCOPES?.split(",") // request scopes / privileges you want to have access to
-}));
+// route which will redirect us for authenticing (loggin us in)
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    session: false,
+    scope: ["profile"],
+    // scope: process.env.SCOPES?.split(",") // request scopes / privileges you want to have access to
+  })
+)
 
 // CALLBACK route which will wait for the login response...
   // handles both: successful logins or login cancelation
-app.get('/auth/github/callback', 
+app.get('/auth/google/cb', 
   (req, res, next) => {
     console.log("[CALLBACK / REDIRECT FROM LOGIN PROVIDER]")
     next()
   },
-  passport.authenticate('github', { 
+  passport.authenticate('google', { 
     session: false,
     // if user declined => do not create any JWT or anything else => just redirect
     failureRedirect: '/' // or /login
@@ -102,9 +83,8 @@ app.get('/auth/github/callback',
 
     const tokenData = {
       _id: req.user.id,
-      username: req.user.username,
-      profileUrl: req.user.profileUrl,
-      avatarUrl: req.user.avatar_url || req.user._json.avatar_url,
+      username: req.user.displayName,
+      avatarUrl: req.user._json.picture,
     }
     const token = jwt.sign(tokenData, process.env.JWT_SECRET)
 
@@ -136,13 +116,12 @@ const authLocal = (req, res, next) => {
 app.get("/profile", authLocal, (req, res) => {
   console.log("[PROFILE]")
   console.log("- User: ", req.user)
-  const { username, profileUrl, avatarUrl } = req.user
+  const { username, avatarUrl } = req.user
 
   res.send(`
     <h1>User Profile</h1>
     <img width="150" height="150" src="${avatarUrl}" />
     <div>Username: ${username}</div>
-    <div>URL: ${profileUrl}</div>    
     <div><a href="/">Back to Home</a></div>    
   `)
 })
@@ -153,7 +132,7 @@ app.get('/', (req, res) => {
 
   res.send(`
     <h1>Login Options</h1>
-    <a href="/auth/github">GitHub Login</a>
+    <a href="/auth/google">Google Login</a>
     <a href="/profile">User Profile</a>
   `)
 });
