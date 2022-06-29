@@ -120,7 +120,6 @@ app.get("/profile", authLocal, (req, res) => {
 
   res.send(`
     <h1>User Profile</h1>
-    <img width="150" height="150" src="${avatarUrl}" />
     <div>Username: ${username}</div>
     <div><a href="/">Back to Home</a></div>    
   `)
