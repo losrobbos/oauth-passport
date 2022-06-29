@@ -15,10 +15,12 @@ app.use(session({
   resave: false
 }))
 
-// register passport middleware
-app.use(passport.initialize()) // this will activate passport routing
+// IMPORTANT => we must initialize passport session AFTER we loaded generic express-session library 
 
-// this will passport handle local login sessions (no oauth)
+// register passport middleware
+app.use(passport.initialize()) // this will trigger the call of "serializeUser" function to create a session & cookie
+
+// this will passport handle local login sessions
 // THIS will trigger the call to "deserializeUser" upfront a route call!
 // this way we can handle creation / recreations of local sessions
 app.use(passport.session()) 
@@ -145,21 +147,7 @@ app.get('/auth/github/callback',
     //failureRedirect: 'http://localhost:3000/login' //absolute URL to frontend works too!!
   }),
 
-  // this callback handles SUCCESSFUL login
-  // in case we need to do anything here, otherwise successRedirect will be enough!
-  // (req, res) => {
-  //   console.log("[CALLBACK]")
-  //   // Successful authentication, redirect home.
-  //   console.log("Login was succesful")
-  //   // res.json("You are logged in!")
-
-  //   // REDIRECT TO FRONTEND AT THE END TO DISPLAY .e.g. PROFILE INFORMATION
-  //   res.redirect('/profile')
-  // }
 );
-
-// app.use(passport.authenticate("session"))
-
 
 const authLocal = (req, res, next) => {
   if(!req.isAuthenticated()) {
