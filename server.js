@@ -118,9 +118,13 @@ passport.serializeUser(async (userGithub, done) => {
 
 });
 
+// deserializeUser is called each time we visit out API
+// deserializeUser will, in the background, read the infomration from the cookie the frontend sent to us
+// and store it in the session 
 // read userId from session 
 // and read FULL user info (e.g. from database) into req.user
 // by calling the "done" callback at the end, we can decide what info should get stored inside req.user 
+// so the endresult of deserializeUser is => the authenticated user info stored in req.user variable
 passport.deserializeUser(async (userId, done) => {
   console.log("[PASSPORT] DESERIALIZE USER called");
   console.log("- UserID in session: ", userId)
